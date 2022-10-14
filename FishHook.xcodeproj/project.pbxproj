@@ -25,9 +25,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		3AAEE81E28F93C3100768307 /* FishHook */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FishHook; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AAEE81E28F93C3100768307 /* fishhook */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fishhook; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AAEE82128F93C3100768307 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		3AAEE82C28F93C7900768307 /* libDylibInject.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libDylibInject.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AAEE82C28F93C7900768307 /* libinject.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinject.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AAEE83C28F943EF00768307 /* syscall_hook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = syscall_hook.c; path = DylibInject/syscall_hook.c; sourceTree = "<group>"; };
 		3AAEE83E28F9440700768307 /* MachORepack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MachORepack.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -56,14 +56,15 @@
 				3AAEE83B28F943CB00768307 /* DylibInject */,
 				3AAEE82028F93C3100768307 /* FishHook */,
 				3AAEE81F28F93C3100768307 /* Products */,
+				3AAEE84028F9447500768307 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
 		3AAEE81F28F93C3100768307 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3AAEE81E28F93C3100768307 /* FishHook */,
-				3AAEE82C28F93C7900768307 /* libDylibInject.dylib */,
+				3AAEE81E28F93C3100768307 /* fishhook */,
+				3AAEE82C28F93C7900768307 /* libinject.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -83,6 +84,13 @@
 				3AAEE83C28F943EF00768307 /* syscall_hook.c */,
 			);
 			name = DylibInject;
+			sourceTree = "<group>";
+		};
+		3AAEE84028F9447500768307 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,7 +120,7 @@
 			);
 			name = FishHook;
 			productName = FishHook;
-			productReference = 3AAEE81E28F93C3100768307 /* FishHook */;
+			productReference = 3AAEE81E28F93C3100768307 /* fishhook */;
 			productType = "com.apple.product-type.tool";
 		};
 		3AAEE82B28F93C7900768307 /* DylibInject */ = {
@@ -129,7 +137,7 @@
 			);
 			name = DylibInject;
 			productName = DylibInject;
-			productReference = 3AAEE82C28F93C7900768307 /* libDylibInject.dylib */;
+			productReference = 3AAEE82C28F93C7900768307 /* libinject.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -309,7 +317,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = C48U2B38TC;
 				ENABLE_HARDENED_RUNTIME = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuwastone.fishhook;
+				PRODUCT_NAME = fishhook;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -320,7 +330,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = C48U2B38TC;
 				ENABLE_HARDENED_RUNTIME = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nuwastone.fishhook;
+				PRODUCT_NAME = fishhook;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -333,7 +345,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_NAME = inject;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -346,7 +359,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = lib;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				PRODUCT_NAME = inject;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
