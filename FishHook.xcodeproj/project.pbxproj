@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		3AAEE82228F93C3100768307 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AAEE82128F93C3100768307 /* main.swift */; };
+		3AAEE83D28F943EF00768307 /* syscall_hook.c in Sources */ = {isa = PBXBuildFile; fileRef = 3AAEE83C28F943EF00768307 /* syscall_hook.c */; };
+		3AAEE83F28F9440700768307 /* MachORepack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AAEE83E28F9440700768307 /* MachORepack.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,6 +28,8 @@
 		3AAEE81E28F93C3100768307 /* FishHook */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FishHook; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AAEE82128F93C3100768307 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		3AAEE82C28F93C7900768307 /* libDylibInject.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libDylibInject.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		3AAEE83C28F943EF00768307 /* syscall_hook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = syscall_hook.c; path = DylibInject/syscall_hook.c; sourceTree = "<group>"; };
+		3AAEE83E28F9440700768307 /* MachORepack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MachORepack.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +53,7 @@
 		3AAEE81528F93C3100768307 = {
 			isa = PBXGroup;
 			children = (
+				3AAEE83B28F943CB00768307 /* DylibInject */,
 				3AAEE82028F93C3100768307 /* FishHook */,
 				3AAEE81F28F93C3100768307 /* Products */,
 			);
@@ -66,9 +71,18 @@
 		3AAEE82028F93C3100768307 /* FishHook */ = {
 			isa = PBXGroup;
 			children = (
+				3AAEE83E28F9440700768307 /* MachORepack.swift */,
 				3AAEE82128F93C3100768307 /* main.swift */,
 			);
 			path = FishHook;
+			sourceTree = "<group>";
+		};
+		3AAEE83B28F943CB00768307 /* DylibInject */ = {
+			isa = PBXGroup;
+			children = (
+				3AAEE83C28F943EF00768307 /* syscall_hook.c */,
+			);
+			name = DylibInject;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -160,6 +174,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3AAEE83F28F9440700768307 /* MachORepack.swift in Sources */,
 				3AAEE82228F93C3100768307 /* main.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -168,6 +183,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3AAEE83D28F943EF00768307 /* syscall_hook.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
