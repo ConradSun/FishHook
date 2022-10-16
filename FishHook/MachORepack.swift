@@ -21,7 +21,8 @@ class MachORepack {
         task.arguments = ["-f", "-s", "-", binaryPath]
         try? task.run()
     }
-    private func injectDylib(is64bit: Bool) -> Bool {
+    
+    private func injectDylib(header: mach_header, offset: UInt64, is64bit: Bool) -> Bool {
         guard let fileHandle = FileHandle(forWritingAtPath: binaryPath) else {
             print("File to create handler for binary file.")
             return false
@@ -29,43 +30,65 @@ class MachORepack {
         
         let pathSize = (dylibPath.count & ~(pathPadding - 1)) + pathPadding
         let cmdSize = MemoryLayout<dylib_command>.size + pathSize
-        var cmdOffset = 0
+        var cmdOffset: UInt64 = 0
         var dylibCmd = dylib_command()
         
         if is64bit {
-            cmdOffset = MemoryLayout<mach_header_64>.size
+            cmdOffset = offset + UInt64(MemoryLayout<mach_header_64>.size)
         }
         else {
-            cmdOffset = MemoryLayout<mach_header>.size
+            cmdOffset = offset + UInt64(MemoryLayout<mach_header>.size)
         }
         
         dylibCmd.cmd = UInt32(LC_LOAD_DYLIB)
         dylibCmd.cmdsize = UInt32(cmdSize)
         dylibCmd.dylib.name = lc_str(offset: UInt32(MemoryLayout<dylib_command>.size))
         
-        let result = machOData.withUnsafeBytes { pointer -> Bool in
+        try? fileHandle.seek(toOffset: cmdOffset + UInt64(header.sizeofcmds))
+        fileHandle.write(Data(bytes: &dylibCmd, count: MemoryLayout<dylib_command>.size))
+        fileHandle.write(dylibPath.data(using: .utf8)!)
+        
+        var newHeader = header
+        newHeader.ncmds = newHeader.ncmds + 1
+        newHeader.sizeofcmds = newHeader.sizeofcmds + UInt32(cmdSize)
+        try? fileHandle.seek(toOffset: offset)
+        fileHandle.write(Data(bytes: &newHeader, count: MemoryLayout<mach_header>.size))
+        
+        try? fileHandle.close()
+        return true
+    }
+    
+    private func processThinMachO(offset: Int) -> Bool {
+        let thinData = machOData.advanced(by: offset)
+        return thinData.withUnsafeBytes { pointer in
             guard let header = pointer.bindMemory(to: mach_header.self).baseAddress else {
                 print("File to get mach header pointer.")
                 return false
             }
             
-            print("ncmds: \(header.pointee.ncmds), sizeofcmds: \(header.pointee.sizeofcmds).")
-            
-            try? fileHandle.seek(toOffset: UInt64(cmdOffset) + UInt64(header.pointee.sizeofcmds))
-            fileHandle.write(Data(bytes: &dylibCmd, count: MemoryLayout<dylib_command>.size))
-            fileHandle.write(dylibPath.data(using: .utf8)!)
-            
-            var newHeader = header.pointee
-            newHeader.ncmds = newHeader.ncmds + 1
-            newHeader.sizeofcmds = newHeader.sizeofcmds + UInt32(cmdSize)
-            try? fileHandle.seek(toOffset: 0)
-            fileHandle.write(Data(bytes: &newHeader, count: MemoryLayout<mach_header>.size))
-            return true
+            switch header.pointee.magic {
+            case MH_MAGIC_64, MH_CIGAM_64:
+                return injectDylib(header: header.pointee, offset: UInt64(offset), is64bit: true)
+            case MH_MAGIC, MH_CIGAM:
+                return injectDylib(header: header.pointee, offset: UInt64(offset), is64bit: false)
+            default:
+                print("Unknown MachO format.")
+                return false
+            }
         }
-        
-        try? fileHandle.close()
-        signAdhoc()
-        return result
+    }
+    
+    private func processFatMachO(offset: Int) -> Bool {
+        let fatData = machOData.advanced(by: offset)
+        return fatData.withUnsafeBytes { pointer in
+            guard let arch = pointer.bindMemory(to: fat_arch.self).baseAddress else {
+                print("File to get fat arch pointer.")
+                return false
+            }
+            
+            let offset = _OSSwapInt32(arch.pointee.offset)
+            return processThinMachO(offset: Int(offset))
+        }
     }
     
     func initWithFile(filePath: String, libPath: String) -> Bool {
@@ -95,17 +118,35 @@ class MachORepack {
                 return false
             }
             
+            var result = false
+            var offset = MemoryLayout<fat_header>.size
+            let archNum = _OSSwapInt32(header.pointee.nfat_arch)
+            
             switch header.pointee.magic {
             case FAT_MAGIC, FAT_CIGAM:
-                print("Unsupport mutiple platform.")
-                return false
-            case MH_MAGIC_64, MH_CIGAM_64:
-                return injectDylib(is64bit: true)
-            case MH_MAGIC, MH_CIGAM:
-                return injectDylib(is64bit: false)
+                if archNum == 0 {
+                    print("Format of Fat-MachO is invalid.")
+                    return false
+                }
+                
+                for i in 0 ..< archNum {
+                    if i > 0 {
+                        offset = offset + MemoryLayout<fat_arch>.size
+                    }
+                    result = processFatMachO(offset: offset)
+                    if !result {
+                        return false
+                    }
+                }
+            case MH_MAGIC_64, MH_CIGAM_64, MH_MAGIC, MH_CIGAM:
+                result = processThinMachO(offset: 0)
             default:
+                print("Unknown MachO format.")
                 return false
             }
+            
+            signAdhoc()
+            return result
         }
     }
 }
