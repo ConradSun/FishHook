@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3AAEE81D28F93C3100768307"
-               BuildableName = "FishHook"
+               BuildableName = "fishhook"
                BlueprintName = "FishHook"
                ReferencedContainer = "container:FishHook.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3AAEE81D28F93C3100768307"
-            BuildableName = "FishHook"
+            BuildableName = "fishhook"
             BlueprintName = "FishHook"
             ReferencedContainer = "container:FishHook.xcodeproj">
          </BuildableReference>
@@ -68,7 +68,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3AAEE81D28F93C3100768307"
-            BuildableName = "FishHook"
+            BuildableName = "fishhook"
             BlueprintName = "FishHook"
             ReferencedContainer = "container:FishHook.xcodeproj">
          </BuildableReference>
