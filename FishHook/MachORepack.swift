@@ -24,7 +24,7 @@ class MachORepack {
     
     private func injectDylib(header: mach_header, offset: UInt64, is64bit: Bool) -> Bool {
         guard let fileHandle = FileHandle(forWritingAtPath: binaryPath) else {
-            print("File to create handler for binary file.")
+            print("Failed to create handler for binary file.")
             return false
         }
         
@@ -62,7 +62,7 @@ class MachORepack {
         let thinData = machOData.advanced(by: offset)
         return thinData.withUnsafeBytes { pointer in
             guard let header = pointer.bindMemory(to: mach_header.self).baseAddress else {
-                print("File to get mach header pointer.")
+                print("Failed to get mach header pointer.")
                 return false
             }
             
@@ -82,7 +82,7 @@ class MachORepack {
         let fatData = machOData.advanced(by: offset)
         return fatData.withUnsafeBytes { pointer in
             guard let arch = pointer.bindMemory(to: fat_arch.self).baseAddress else {
-                print("File to get fat arch pointer.")
+                print("Failed to get fat arch pointer.")
                 return false
             }
             
@@ -114,7 +114,7 @@ class MachORepack {
         
         return machOData.withUnsafeBytes { pointer in
             guard let header = pointer.bindMemory(to: fat_header.self).baseAddress else {
-                print("File to get fat header pointer.")
+                print("Failed to get fat header pointer.")
                 return false
             }
             
