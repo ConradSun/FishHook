@@ -17,7 +17,7 @@ func main() {
     let repack = MachORepack()
     if repack.initWithFile(filePath: filePath, libPath: libPath) {
         if repack.repackBinary() {
-            print("Repack binary successfully.")
+            print("[INFO] Repack binary successfully.")
         }
     }
 }

@@ -22,9 +22,75 @@ class MachORepack {
         try? task.run()
     }
     
+    private func getSegmentCommand(data: Data) -> segment_command_64? {
+        return data.withUnsafeBytes { pointer in
+            guard let segCmd = pointer.bindMemory(to: segment_command_64.self).baseAddress else {
+                print("[ERROR] Failed to get segment command pointer.")
+                return nil
+            }
+            return segCmd.pointee
+        }
+    }
+    
+    private func getSectionCommand(data: Data) -> section_64? {
+        return data.withUnsafeBytes { pointer in
+            guard let sectCmd = pointer.bindMemory(to: section_64.self).baseAddress else {
+                print("[ERROR] Failed to get section pointer.")
+                return nil
+            }
+            return sectCmd.pointee
+        }
+    }
+    
+    private func isSpaceEnough(header: mach_header, offset: Int, is64bit: Bool) ->Bool {
+        let pathSize = (dylibPath.count & ~(pathPadding - 1)) + pathPadding
+        let injectSpace = MemoryLayout<dylib_command>.size + pathSize
+        let machData = machOData.advanced(by: offset)
+        let headerSize = is64bit ? MemoryLayout<mach_header_64>.size : MemoryLayout<mach_header>.size
+        
+        var segOffset = offset
+        return machData.withUnsafeBytes { pointer in
+            for _ in 0 ..< header.ncmds {
+                guard let loadCmd = pointer.bindMemory(to: load_command.self).baseAddress else {
+                    print("[ERROR] Failed to get load command pointer.")
+                    return false
+                }
+                
+                let segData = machOData.subdata(in: segOffset..<segOffset+MemoryLayout<segment_command_64>.size)
+                guard let segCmd = getSegmentCommand(data: segData) else {
+                    print("[ERROR] Failed to get segment command pointer.")
+                    return false
+                }
+                
+                var segName = segCmd.segname
+                if (strncmp(&segName.0, "__TEXT", 15) == 0) {
+                    for i in 0 ..< segCmd.nsects {
+                        let sectOffset = segOffset + MemoryLayout<segment_command_64>.size + MemoryLayout<section_64>.size * Int(i)
+                        let sectData = machOData.subdata(in: sectOffset..<sectOffset+MemoryLayout<section_64>.size)
+                        guard let sectCmd = getSectionCommand(data: sectData) else {
+                            print("[ERROR] Failed to get section pointer.")
+                            return false
+                        }
+                        
+                        var sectName = sectCmd.sectname
+                        if (strncmp(&sectName.0, "__text", 15) == 0) {
+                            let space = sectCmd.offset - header.sizeofcmds - UInt32(headerSize)
+                            print("[INFO] Available space is \(space/8) bytes.")
+                            return space > injectSpace
+                        }
+                    }
+                }
+                else {
+                    segOffset = segOffset + Int(loadCmd.pointee.cmdsize)
+                }
+            }
+            return false
+        }
+    }
+    
     private func injectDylib(header: mach_header, offset: UInt64, is64bit: Bool) -> Bool {
         guard let fileHandle = FileHandle(forWritingAtPath: binaryPath) else {
-            print("Failed to create handler for binary file.")
+            print("[ERROR] Failed to create handler for binary file.")
             return false
         }
         
@@ -38,6 +104,11 @@ class MachORepack {
         }
         else {
             cmdOffset = offset + UInt64(MemoryLayout<mach_header>.size)
+        }
+        
+        if !isSpaceEnough(header: header, offset: Int(cmdOffset), is64bit: is64bit) {
+            print("[ERROR] No space for adding command.")
+            return false
         }
         
         dylibCmd.cmd = UInt32(LC_LOAD_DYLIB)
@@ -62,7 +133,7 @@ class MachORepack {
         let thinData = machOData.advanced(by: offset)
         return thinData.withUnsafeBytes { pointer in
             guard let header = pointer.bindMemory(to: mach_header.self).baseAddress else {
-                print("Failed to get mach header pointer.")
+                print("[ERROR] Failed to get mach header pointer.")
                 return false
             }
             
@@ -72,7 +143,7 @@ class MachORepack {
             case MH_MAGIC, MH_CIGAM:
                 return injectDylib(header: header.pointee, offset: UInt64(offset), is64bit: false)
             default:
-                print("Unknown MachO format.")
+                print("[ERROR] Unknown MachO format.")
                 return false
             }
         }
@@ -82,7 +153,7 @@ class MachORepack {
         let fatData = machOData.advanced(by: offset)
         return fatData.withUnsafeBytes { pointer in
             guard let arch = pointer.bindMemory(to: fat_arch.self).baseAddress else {
-                print("Failed to get fat arch pointer.")
+                print("[ERROR] Failed to get fat arch pointer.")
                 return false
             }
             
@@ -93,11 +164,11 @@ class MachORepack {
     
     func initWithFile(filePath: String, libPath: String) -> Bool {
         if !FileManager.default.isExecutableFile(atPath: filePath) {
-            print("File to be modified is not Executable.")
+            print("[ERROR] Failed to be modified is not Executable.")
             return false
         }
         guard let data = FileManager.default.contents(atPath: filePath) else {
-            print("Failed to obtain contents for file.")
+            print("[ERROR] Failed to obtain contents for file.")
             return false
         }
         
@@ -114,7 +185,7 @@ class MachORepack {
         
         return machOData.withUnsafeBytes { pointer in
             guard let header = pointer.bindMemory(to: fat_header.self).baseAddress else {
-                print("Failed to get fat header pointer.")
+                print("[ERROR] Failed to get fat header pointer.")
                 return false
             }
             
@@ -125,7 +196,7 @@ class MachORepack {
             switch header.pointee.magic {
             case FAT_MAGIC, FAT_CIGAM:
                 if archNum == 0 {
-                    print("Format of Fat-MachO is invalid.")
+                    print("[ERROR] Format of Fat-MachO is invalid.")
                     return false
                 }
                 
@@ -141,7 +212,7 @@ class MachORepack {
             case MH_MAGIC_64, MH_CIGAM_64, MH_MAGIC, MH_CIGAM:
                 result = processThinMachO(offset: 0)
             default:
-                print("Unknown MachO format.")
+                print("[ERROR] Unknown MachO format.")
                 return false
             }
             
