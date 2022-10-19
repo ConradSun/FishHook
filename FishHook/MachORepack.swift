@@ -45,47 +45,39 @@ class MachORepack {
     private func isSpaceEnough(header: mach_header, offset: Int, is64bit: Bool) ->Bool {
         let pathSize = (dylibPath.count & ~(pathPadding - 1)) + pathPadding
         let injectSpace = MemoryLayout<dylib_command>.size + pathSize
-        let machData = machOData.advanced(by: offset)
         let headerSize = is64bit ? MemoryLayout<mach_header_64>.size : MemoryLayout<mach_header>.size
         
         var segOffset = offset
-        return machData.withUnsafeBytes { pointer in
-            for _ in 0 ..< header.ncmds {
-                guard let loadCmd = pointer.bindMemory(to: load_command.self).baseAddress else {
-                    print("[ERROR] Failed to get load command pointer.")
-                    return false
-                }
-                
-                let segData = machOData.subdata(in: segOffset..<segOffset+MemoryLayout<segment_command_64>.size)
-                guard let segCmd = getSegmentCommand(data: segData) else {
-                    print("[ERROR] Failed to get segment command pointer.")
-                    return false
-                }
-                
-                var segName = segCmd.segname
-                if (strncmp(&segName.0, "__TEXT", 15) == 0) {
-                    for i in 0 ..< segCmd.nsects {
-                        let sectOffset = segOffset + MemoryLayout<segment_command_64>.size + MemoryLayout<section_64>.size * Int(i)
-                        let sectData = machOData.subdata(in: sectOffset..<sectOffset+MemoryLayout<section_64>.size)
-                        guard let sectCmd = getSectionCommand(data: sectData) else {
-                            print("[ERROR] Failed to get section pointer.")
-                            return false
-                        }
-                        
-                        var sectName = sectCmd.sectname
-                        if (strncmp(&sectName.0, "__text", 15) == 0) {
-                            let space = sectCmd.offset - header.sizeofcmds - UInt32(headerSize)
-                            print("[INFO] Available space is \(space/8) bytes.")
-                            return space > injectSpace
-                        }
+        for _ in 0 ..< header.ncmds {
+            let segData = machOData.subdata(in: segOffset..<segOffset+MemoryLayout<segment_command_64>.size)
+            guard let segCmd = getSegmentCommand(data: segData) else {
+                print("[ERROR] Failed to get segment command pointer.")
+                return false
+            }
+            
+            var segName = segCmd.segname
+            if (strncmp(&segName.0, "__TEXT", 15) == 0) {
+                for i in 0 ..< segCmd.nsects {
+                    let sectOffset = segOffset + MemoryLayout<segment_command_64>.size + MemoryLayout<section_64>.size * Int(i)
+                    let sectData = machOData.subdata(in: sectOffset..<sectOffset+MemoryLayout<section_64>.size)
+                    guard let sectCmd = getSectionCommand(data: sectData) else {
+                        print("[ERROR] Failed to get section pointer.")
+                        return false
+                    }
+                    
+                    var sectName = sectCmd.sectname
+                    if (strncmp(&sectName.0, "__text", 15) == 0) {
+                        let space = sectCmd.offset - header.sizeofcmds - UInt32(headerSize)
+                        print("[INFO] Available space is \(space/8) bytes.")
+                        return space > injectSpace
                     }
                 }
-                else {
-                    segOffset = segOffset + Int(loadCmd.pointee.cmdsize)
-                }
             }
-            return false
+            else {
+                segOffset = segOffset + Int(segCmd.cmdsize)
+            }
         }
+        return false
     }
     
     private func injectDylib(header: mach_header, offset: UInt64, is64bit: Bool) -> Bool {
@@ -130,7 +122,7 @@ class MachORepack {
     }
     
     private func processThinMachO(offset: Int) -> Bool {
-        let thinData = machOData.advanced(by: offset)
+        let thinData = machOData.subdata(in: offset..<offset+MemoryLayout<mach_header>.size)
         return thinData.withUnsafeBytes { pointer in
             guard let header = pointer.bindMemory(to: mach_header.self).baseAddress else {
                 print("[ERROR] Failed to get mach header pointer.")
@@ -150,7 +142,7 @@ class MachORepack {
     }
     
     private func processFatMachO(offset: Int) -> Bool {
-        let fatData = machOData.advanced(by: offset)
+        let fatData = machOData.subdata(in: offset..<offset+MemoryLayout<fat_arch>.size)
         return fatData.withUnsafeBytes { pointer in
             guard let arch = pointer.bindMemory(to: fat_arch.self).baseAddress else {
                 print("[ERROR] Failed to get fat arch pointer.")
