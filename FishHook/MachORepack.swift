@@ -10,10 +10,13 @@ import MachO
 
 @available(macOS 10.15, *)
 class MachORepack {
-    private let pathPadding = 8
+    private var fileHandle = FileHandle()
     private var machOData = Data()
     private var binaryPath = String()
     private var dylibPath = String()
+    private let replacePath = "/usr/lib/libSystem.B.dylib"
+    private let maxLength = 32
+    private let nullCharacterSet = CharacterSet(charactersIn: "\0")
     
     private func signAdhoc() {
         let task = Process()
@@ -32,93 +35,59 @@ class MachORepack {
         }
     }
     
-    private func getSectionCommand(data: Data) -> section_64? {
+    private func getDylibCommand(data: Data) -> dylib_command? {
         return data.withUnsafeBytes { pointer in
-            guard let sectCmd = pointer.bindMemory(to: section_64.self).baseAddress else {
-                print("[ERROR] Failed to get section pointer.")
+            guard let dylibCmd = pointer.bindMemory(to: dylib_command.self).baseAddress else {
+                print("[ERROR] Failed to get dylib command pointer.")
                 return nil
             }
-            return sectCmd.pointee
+            return dylibCmd.pointee
         }
     }
     
-    private func isSpaceEnough(header: mach_header, offset: Int, is64bit: Bool) ->Bool {
-        let pathSize = (dylibPath.count & ~(pathPadding - 1)) + pathPadding
-        let injectSpace = MemoryLayout<dylib_command>.size + pathSize
-        let headerSize = is64bit ? MemoryLayout<mach_header_64>.size : MemoryLayout<mach_header>.size
-        
-        var segOffset = offset
-        for _ in 0 ..< header.ncmds {
-            let segData = machOData.subdata(in: segOffset..<segOffset+MemoryLayout<segment_command_64>.size)
-            guard let segCmd = getSegmentCommand(data: segData) else {
-                print("[ERROR] Failed to get segment command pointer.")
-                return false
-            }
-            
-            var segName = segCmd.segname
-            if (strncmp(&segName.0, "__TEXT", 15) == 0) {
-                for i in 0 ..< segCmd.nsects {
-                    let sectOffset = segOffset + MemoryLayout<segment_command_64>.size + MemoryLayout<section_64>.size * Int(i)
-                    let sectData = machOData.subdata(in: sectOffset..<sectOffset+MemoryLayout<section_64>.size)
-                    guard let sectCmd = getSectionCommand(data: sectData) else {
-                        print("[ERROR] Failed to get section pointer.")
-                        return false
-                    }
-                    
-                    var sectName = sectCmd.sectname
-                    if (strncmp(&sectName.0, "__text", 15) == 0) {
-                        let space = sectCmd.offset - header.sizeofcmds - UInt32(headerSize)
-                        print("[INFO] Available space is \(space/8) bytes.")
-                        return space > injectSpace
-                    }
-                }
-            }
-            else {
-                segOffset = segOffset + Int(segCmd.cmdsize)
-            }
-        }
-        return false
+    private func replaceDylib(offset: UInt64, size: Int) -> Bool {
+        try? fileHandle.seek(toOffset: offset)
+        fileHandle.write(Data(repeating: 0, count: size))
+        try? fileHandle.seek(toOffset: offset)
+        fileHandle.write(dylibPath.data(using: .utf8)!)
+        return true
     }
     
     private func injectDylib(header: mach_header, offset: UInt64, is64bit: Bool) -> Bool {
-        guard let fileHandle = FileHandle(forWritingAtPath: binaryPath) else {
-            print("[ERROR] Failed to create handler for binary file.")
-            return false
-        }
-        
-        let pathSize = (dylibPath.count & ~(pathPadding - 1)) + pathPadding
-        let cmdSize = MemoryLayout<dylib_command>.size + pathSize
         var cmdOffset: UInt64 = 0
-        var dylibCmd = dylib_command()
-        
         if is64bit {
             cmdOffset = offset + UInt64(MemoryLayout<mach_header_64>.size)
         }
         else {
             cmdOffset = offset + UInt64(MemoryLayout<mach_header>.size)
         }
-        
-        if !isSpaceEnough(header: header, offset: Int(cmdOffset), is64bit: is64bit) {
-            print("[ERROR] No space for adding command.")
-            return false
+        for _ in 0 ..< header.ncmds {
+            let segData = machOData.subdata(in: Data.Index(cmdOffset)..<Int(cmdOffset)+MemoryLayout<segment_command_64>.size)
+            guard let segCmd = getSegmentCommand(data: segData) else {
+                print("[ERROR] Failed to get segment command pointer.")
+                return false
+            }
+            
+            if (segCmd.cmd == LC_LOAD_DYLIB) {
+                guard let dylibCmd = getDylibCommand(data: segData) else {
+                    print("[ERROR] Failed to get dylib command pointer.")
+                    return false
+                }
+                let nameOffset = cmdOffset+UInt64(dylibCmd.dylib.name.offset)
+                let nameSize = UInt64(dylibCmd.cmdsize) - UInt64(MemoryLayout<dylib_command>.size)
+                let nameData = machOData.subdata(in: Data.Index(nameOffset)..<Int(nameOffset+nameSize))
+                guard let libName = String(data: nameData, encoding: .utf8) else {
+                    return false
+                }
+                let trimmedName = libName.trimmingCharacters(in: nullCharacterSet)
+                if trimmedName == replacePath {
+                    print("[INFO] Find dylib for replacing, now repacking...")
+                    return replaceDylib(offset: nameOffset, size: Int(nameSize))
+                }
+            }
+            cmdOffset = cmdOffset + UInt64(segCmd.cmdsize)
         }
-        
-        dylibCmd.cmd = UInt32(LC_LOAD_DYLIB)
-        dylibCmd.cmdsize = UInt32(cmdSize)
-        dylibCmd.dylib.name = lc_str(offset: UInt32(MemoryLayout<dylib_command>.size))
-        
-        try? fileHandle.seek(toOffset: cmdOffset + UInt64(header.sizeofcmds))
-        fileHandle.write(Data(bytes: &dylibCmd, count: MemoryLayout<dylib_command>.size))
-        fileHandle.write(dylibPath.data(using: .utf8)!)
-        
-        var newHeader = header
-        newHeader.ncmds = newHeader.ncmds + 1
-        newHeader.sizeofcmds = newHeader.sizeofcmds + UInt32(cmdSize)
-        try? fileHandle.seek(toOffset: offset)
-        fileHandle.write(Data(bytes: &newHeader, count: MemoryLayout<mach_header>.size))
-        
-        try? fileHandle.close()
-        return true
+        return false
     }
     
     private func processThinMachO(offset: Int) -> Bool {
@@ -155,17 +124,31 @@ class MachORepack {
     }
     
     func initWithFile(filePath: String, libPath: String) -> Bool {
+        if libPath.count > maxLength {
+            print("[ERROR] Length of the dylib for replacing is too long (should be < 32).")
+            return false
+        }
         if !FileManager.default.isExecutableFile(atPath: filePath) {
             print("[ERROR] Failed to be modified is not Executable.")
             return false
         }
-        guard let data = FileManager.default.contents(atPath: filePath) else {
+        let sourceURL = URL(fileURLWithPath: filePath)
+        let repackPath = filePath+"-mod"
+        let repackURL = URL(fileURLWithPath: filePath+"-mod")
+        try? FileManager.default.removeItem(at: repackURL)
+        try? FileManager.default.copyItem(at: sourceURL, to: repackURL)
+        guard let file = FileHandle(forWritingAtPath: repackPath) else {
+            print("[ERROR] Failed to create handler for binary file.")
+            return false
+        }
+        guard let data = FileManager.default.contents(atPath: repackPath) else {
             print("[ERROR] Failed to obtain contents for file.")
             return false
         }
         
-        binaryPath = filePath
+        binaryPath = repackPath
         dylibPath = libPath
+        fileHandle = file
         machOData = data
         return true
     }
@@ -181,7 +164,6 @@ class MachORepack {
                 return false
             }
             
-            var result = false
             var offset = MemoryLayout<fat_header>.size
             let archNum = _OSSwapInt32(header.pointee.nfat_arch)
             
@@ -196,20 +178,23 @@ class MachORepack {
                     if i > 0 {
                         offset = offset + MemoryLayout<fat_arch>.size
                     }
-                    result = processFatMachO(offset: offset)
-                    if !result {
+                    if !processFatMachO(offset: offset) {
+                        print("[ERROR] Failed to inject for arch index: \(i+1).")
                         return false
                     }
                 }
             case MH_MAGIC_64, MH_CIGAM_64, MH_MAGIC, MH_CIGAM:
-                result = processThinMachO(offset: 0)
+                if !processThinMachO(offset: 0) {
+                    print("[ERROR] Failed to inject.")
+                    return false
+                }
             default:
                 print("[ERROR] Unknown MachO format.")
                 return false
             }
             
             signAdhoc()
-            return result
+            return true
         }
     }
 }

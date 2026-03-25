@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -22,6 +22,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		3AC32AD42D6DA1AF00D7BC31 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +39,12 @@
 		3AAEE82C28F93C7900768307 /* libinject.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libinject.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AAEE83C28F943EF00768307 /* syscall_hook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = syscall_hook.c; path = DylibInject/syscall_hook.c; sourceTree = "<group>"; };
 		3AAEE83E28F9440700768307 /* MachORepack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MachORepack.swift; sourceTree = "<group>"; };
+		3AC32AD62D6DA1AF00D7BC31 /* testexec */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testexec; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		3AC32AD72D6DA1AF00D7BC31 /* TestExec */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = TestExec; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		3AAEE81B28F93C3100768307 /* Frameworks */ = {
@@ -47,6 +61,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3AC32AD32D6DA1AF00D7BC31 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -55,6 +76,7 @@
 			children = (
 				3AAEE83B28F943CB00768307 /* DylibInject */,
 				3AAEE82028F93C3100768307 /* FishHook */,
+				3AC32AD72D6DA1AF00D7BC31 /* TestExec */,
 				3AAEE81F28F93C3100768307 /* Products */,
 				3AAEE84028F9447500768307 /* Frameworks */,
 			);
@@ -65,6 +87,7 @@
 			children = (
 				3AAEE81E28F93C3100768307 /* fishhook */,
 				3AAEE82C28F93C7900768307 /* libinject.dylib */,
+				3AC32AD62D6DA1AF00D7BC31 /* testexec */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -130,6 +153,7 @@
 				3AAEE82828F93C7900768307 /* Headers */,
 				3AAEE82928F93C7900768307 /* Sources */,
 				3AAEE82A28F93C7900768307 /* Frameworks */,
+				3AC32AD12D6D9E0600D7BC31 /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -140,6 +164,28 @@
 			productReference = 3AAEE82C28F93C7900768307 /* libinject.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
+		3AC32AD52D6DA1AF00D7BC31 /* TestExec */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3AC32ADA2D6DA1AF00D7BC31 /* Build configuration list for PBXNativeTarget "TestExec" */;
+			buildPhases = (
+				3AC32AD22D6DA1AF00D7BC31 /* Sources */,
+				3AC32AD32D6DA1AF00D7BC31 /* Frameworks */,
+				3AC32AD42D6DA1AF00D7BC31 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3AC32AD72D6DA1AF00D7BC31 /* TestExec */,
+			);
+			name = TestExec;
+			packageProductDependencies = (
+			);
+			productName = TestExec;
+			productReference = 3AC32AD62D6DA1AF00D7BC31 /* testexec */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -148,13 +194,16 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1340;
-				LastUpgradeCheck = 1340;
+				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					3AAEE81D28F93C3100768307 = {
 						CreatedOnToolsVersion = 13.4.1;
 					};
 					3AAEE82B28F93C7900768307 = {
 						CreatedOnToolsVersion = 13.4.1;
+					};
+					3AC32AD52D6DA1AF00D7BC31 = {
+						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
@@ -173,9 +222,31 @@
 			targets = (
 				3AAEE81D28F93C3100768307 /* FishHook */,
 				3AAEE82B28F93C7900768307 /* DylibInject */,
+				3AC32AD52D6DA1AF00D7BC31 /* TestExec */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3AC32AD12D6D9E0600D7BC31 /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change /usr/lib/ssh-keychain.dylib /usr/lib/libSystem.B.dylib ${BUILT_PRODUCTS_DIR}/libinject.dylib\ncodesign -f -s - ${BUILT_PRODUCTS_DIR}/libinject.dylib\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3AAEE81A28F93C3100768307 /* Sources */ = {
@@ -192,6 +263,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				3AAEE83D28F943EF00768307 /* syscall_hook.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3AC32AD22D6DA1AF00D7BC31 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -231,9 +309,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -291,9 +371,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -315,10 +397,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = C48U2B38TC;
 				ENABLE_HARDENED_RUNTIME = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_BUNDLE_IDENTIFIER = com.nuwastone.fishhook;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.conradsun.fishhook;
 				PRODUCT_NAME = fishhook;
 				SWIFT_VERSION = 5.0;
 			};
@@ -328,10 +411,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = C48U2B38TC;
 				ENABLE_HARDENED_RUNTIME = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				PRODUCT_BUNDLE_IDENTIFIER = com.nuwastone.fishhook;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.conradsun.fishhook;
 				PRODUCT_NAME = fishhook;
 				SWIFT_VERSION = 5.0;
 			};
@@ -341,11 +425,18 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = C48U2B38TC;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXECUTABLE_PREFIX = lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-reexport_library",
+					"/usr/lib/ssh-keychain.dylib",
+				);
 				PRODUCT_NAME = inject;
 				SKIP_INSTALL = YES;
 			};
@@ -355,13 +446,52 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = C48U2B38TC;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXECUTABLE_PREFIX = lib;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-reexport_library",
+					"/usr/lib/ssh-keychain.dylib",
+				);
 				PRODUCT_NAME = inject;
 				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		3AC32ADB2D6DA1AF00D7BC31 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = C48U2B38TC;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.conradsun.testexec;
+				PRODUCT_NAME = testexec;
+			};
+			name = Debug;
+		};
+		3AC32ADC2D6DA1AF00D7BC31 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = C48U2B38TC;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.conradsun.testexec;
+				PRODUCT_NAME = testexec;
 			};
 			name = Release;
 		};
@@ -391,6 +521,15 @@
 			buildConfigurations = (
 				3AAEE82E28F93C7900768307 /* Debug */,
 				3AAEE82F28F93C7900768307 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3AC32ADA2D6DA1AF00D7BC31 /* Build configuration list for PBXNativeTarget "TestExec" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3AC32ADB2D6DA1AF00D7BC31 /* Debug */,
+				3AC32ADC2D6DA1AF00D7BC31 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

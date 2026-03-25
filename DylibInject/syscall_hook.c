@@ -17,13 +17,18 @@
 
 static const char *s_repalce_path = "/bin/echo";
 
+__attribute__((constructor))
+void constructor(int argc, const char **argv) {
+    printf("[FishHook] Dylib is injected in %s, now replacing binary path to /bin/echo...\n", argv[0]);
+}
+
 int fh_execve(const char *file, char *const *argv, char *const *envp) {
-    printf("[FishHook - execve] pid: %d, process path: %s.", getpid(), file);
+    printf("[FishHook - execve] pid: %d, process path: %s.\n", getpid(), file);
     return execve(s_repalce_path, argv, envp);
 }
 
 int fh_posix_spawn(pid_t *pid, const char *path, const posix_spawn_file_actions_t *actions, const posix_spawnattr_t *attr, char *const *argv, char *const *envp) {
-    printf("[FishHook - posix_spawn] pid: %d, process path: %s.", *pid, path);
+    printf("[FishHook - posix_spawn] pid: %d, process path: %s.\n", *pid, path);
     return posix_spawn(pid, s_repalce_path, actions, attr, argv, envp);
 }
 

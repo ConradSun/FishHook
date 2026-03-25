@@ -11,6 +11,8 @@ func main() {
     guard CommandLine.argc > 1, #available(macOS 10.15, *) else {
         return
     }
+    print("[INFO] Begin to repack binary.")
+    
     let filePath = CommandLine.arguments[1]
     let libPath = "/usr/local/lib/libinject.dylib"
     
