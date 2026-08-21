@@ -1,3 +1,5 @@
+
+
 # FishHook
 
 <div align="center">A tool for re-packaging binary files on macOS to inject dynamic libraries (dylib).</div>
@@ -12,4 +14,4 @@ The binary `fishhook` can repack binaries to inject `libinject.dylib`, which is 
 
 >1. Copy libinject.dylib to the '/usr/local/lib' directory.
 >2. Run './fishhook $BinaryPath' to repack.
->3. Execute your repacked binary to check if the system call is replaced.
+>3. Execute the repacked binary `$BinaryPath-mod` to check if the system call is replaced.
